@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <meta charset="UTF-8">
+        <title>Study: Memory festival</title>
+        <script src="./jspsych-6.1.0/jspsych.js"></script>
+        <script src="./jspsych-psychophysics-1.3/jspsych-psychophysics.js">
+        //I got this from http://jspsychophysics.hes.kyushu-u.ac.jp/
+        //should be cited: de Leeuw, J.R. jsPsych: A JavaScript library for creating behavioral experiments in a Web browser. Behav Res 47, 1–12 (2015). https://doi.org/10.3758/s13428-014-0458-y
+        // and the kuroki paper (its findable at the link and also in my zotero)          
+        </script>
+        <script src="./jspsych-6.1.0/plugins/jspsych-html-keyboard-response.js"></script>
+        <script src="./jspsych-6.1.0/plugins/jspsych-image-button-response.js"></script>
+        <script src="./jspsych-6.1.0/plugins/jspsych-html-button-response.js"></script>
+        <script src="./jspsych-6.1.0/plugins/jspsych-image-keyboard-response.js"></script>
+        <script src="./jspsych-6.1.0/plugins/jspsych-survey-text.js"></script>
+        <script src="./jspsych-6.1.0/plugins/jspsych-instructions.js"></script>
+        <script src="./typed-response.js"></script>
+        <link href="./jspsych-6.1.0/css/jspsych.css" rel="stylesheet" type="text/css"></link>  
+
+        <!-- packeges needed to interact with php -->
+        <script type="text/javascript" src="./js/jquery-1.11.3.js"></script>
+        <script type="text/javascript" src="./js/jquery-ui-1.12.1.min.js"></script>
+
+    
+        
+    </head>
+
+
+    <style>
+        body {
+                background-color:white ;
+                color: black;
+        }
+        .img-container {
+            position: relative;
+            width: 800px; /* Set the desired width */
+            height: 700px; /* Set the desired height */
+        }
+
+        .img-container img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .text-overlay {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upper-left {
+            top: 5%;
+            left: 5%;
+        }
+
+        .lower-left {
+            bottom: 5%;
+            left: 5%;
+        }
+
+        .upper-right {
+            top: 5%;
+            right: 5%;
+        }
+
+        .lower-right {
+            bottom: 5%;
+            right: 5%;
+        }
+
+        .middle-left {
+            top: 50%;
+            left: 5%;
+            transform: translate(-5%, -50%);
+        }
+
+        .middle-right {
+            top: 50%;
+            right: 5%;
+            transform: translate(-5%, -50%);
+        }
+
+        .middle-top {
+            top: 5%;
+            left: 50%;
+            transform: translate(-50%, -5%);
+        }
+
+        .middle-bottom {
+            bottom: 5%;
+            left: 50%;
+            transform: translate(-50%, -5%);
+        }
+
+        .center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+                
+    </style>
+    <body> 
+    </body>
+    
+
+    <script>
+
+
+        assignmentID = turkGetParam('assignmentId');
+        workerID = turkGetParam('workerId');
+
+        if (assignmentID == ""){
+            assignmentID = "test"
+        }
+
+        if (workerID == ""){
+            workerID = "randomPerson"
+        }
+
+        // generate a random subject ID with 15 characters
+        var subject_id = jsPsych.randomization.randomID(15);
+
+        //construct next page link with worker id and assignment id in the URI
+        nextPage = "comprehension_check.html?" + "workerId=" + workerID + "&assignmentId=" + assignmentID + "&subject_id=" + subject_id; 
+
+        // measure the time at the start of the experiment 
+        // The getTime() method returns the number of milliseconds between midnight of January 1, 1970 and the specified date.
+        var date = new Date()
+        var startTime = date.getTime()
+
+        var dateString = date.getDate().toString()+"_"+date.getMonth().toString()+"_"+date.getFullYear().toString()+"_"+date.getHours().toString()+"_"+date.getMinutes().toString()+"_"+date.getSeconds().toString()
+
+        
+
+
+        // -------      all the FUNCTIONS that javascript doesnt have so I have to write them myself #Imisspython      -------\\
+ 
+        // function to generate random number from 0 to max-1
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * Math.floor(max));
+        }
+
+        //this function generates a random list of integers between zero and max-1 without repetitions of length length
+        function getRandomIndexes(length, max=9) {
+            var indexes = []
+            if (length > max){
+                return "the length is bigger than the max number, which makes this function quite impossible"
+            }
+            while (indexes.length < length){
+                a = getRandomInt(max)
+                if (indexes.includes(a)){}
+                else{
+                    indexes.push(a)
+                }
+
+            }
+            return indexes
+        }
+
+        function getSample(letterList, n) {
+            return jsPsych.randomization.sampleWithoutReplacement(letterList, n);
+        }
+
+
+        // this function takes a list as input and returns a list of length length which is a shuffeled sublist of the original list (there is also the option of specifying a max index)
+        function getShuffeledSublist(list, length, max=list.length){
+
+            //check if the input is ok and if not return feedback
+            if (length > list.length){
+                return "the length is bigger than the list, which makes this function quite impossible"
+            }else if (max > list.length){
+                return "the max is bigger than the list, which makes this function quite impossible"
+            }else if (length > max){
+                return "the length is bigger than the max number, which makes this function quite impossible"
+            }  
+
+            //create a shuffeled sublist
+            var shuffeledSublist = []
+            var indexes = getRandomIndexes(length, max)
+            for (i = 0; i < length; i++) {
+                shuffeledSublist.push(list[indexes[i]]);
+            }
+            return shuffeledSublist
+        }
+
+        // this function allows me to create copies of lists and objects, so that modefying the copy does not change the original (copied this of the internet: https://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object)
+        function clone(obj) {
+            var copy;
+
+            // Handle the 3 simple types, and null or undefined
+            if (null == obj || "object" != typeof obj) return obj;
+
+            // Handle Date
+            if (obj instanceof Date) {
+                copy = new Date();
+                copy.setTime(obj.getTime());
+                return copy;
+            }
+
+            // Handle Array
+            if (obj instanceof Array) {
+                copy = [];
+                for (var i = 0, len = obj.length; i < len; i++) {
+                    copy[i] = clone(obj[i]);
+                }
+                return copy;
+            }
+
+            // Handle Object
+            if (obj instanceof Object) {
+                copy = {};
+                for (var attr in obj) {
+                    if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+                }
+                return copy;
+            }
+
+            throw new Error("Unable to copy obj! Its type isn't supported.");
+        }
+
+
+        // function to shuffel arrays
+        function shuffel(a) {
+            var j, x, i;
+            for (i = a.length - 1; i > 0; i--) {
+                j = Math.floor(Math.random() * (i + 1));
+                x = a[i];
+                a[i] = a[j];
+                a[j] = x;
+            }
+            return a;
+        }
+
+        //this function shuffels the generated sequences according to the shuffel order arrays
+        function getShufffeledSequence(sequence, shuffelList){
+            shuffeledSequence =[]
+            for (let i in shuffelList){ 
+                shuffeledSequence.push(sequence[shuffelList[i]])
+            }
+            return shuffeledSequence
+        };
+
+
+        function turkGetParam(name) {
+            var regexS = "[\?&]" + name + "=([^&#]*)";
+            var regex = new RegExp(regexS);
+            var tmpURL = document.location.href;
+            var results = regex.exec(tmpURL);
+            if (results == null) {
+                return "";
+            } else {
+                return results[1];
+            }
+        }
+
+
+        // -------                all my lovely VARIABLES                -------\\
+
+        
+     
+        var x = window.innerWidth / 2;  // x center of the screen
+        var x_scale = 90   // variable to adjust the positioning
+        var y = window.innerHeight / 2;  // y center of the screen
+        var x_width = 50
+
+        // height setting for the bars
+        var base_height = 150
+        var scale_height = 30
+        var query_size = 100 // radius of the query
+
+        // variables for reward
+        var earned = 8
+        var base_reward = 3
+
+        var repetitions = 1 // reduced number of repetitions for the practive blocks
+
+        var breakBetweenBlocks = 60000 // this should be 1 minute
+
+
+        // settings for the canvas: 
+        var canvas_h = base_height+scale_height+30//window.innerHeight-200
+        var canvas_w = x_scale+3*x_width//window.innerWidth-200
+        var canvas_x_center = canvas_w/2
+
+
+        // stimulus height for the feedback stimulus 
+        var fbHeight = 300
+
+        // presentation time for the word list 
+        var presentationTime = 4000
+
+        // presentation time for the letters
+        var presentationTime_dist = 1000
+
+        // response time for typing
+        var responseTime = 5000
+
+        var responseTime_dist =  10000
+
+        // number of distractor trials
+        var NDistracorTrials = 10
+        var letterLengths = [3, 3, 4, 4, 5, 5, 6, 6, 7, 7]
+
+        // possible letters to be recalled for the distractor task
+        var letters = ['f', 'h', 'j', 'k', 'l', 'n', 'p', 'q', 'r', 's', 't', 'y']; //
+        
+
+        // and lets set up the timeline 
+        var timeline = []
+
+
+
+        // make the list of letters for the task instructions
+
+        var LetterSequencesInstructions = []
+        var letterLengthOrderInstructions = [5,4,7,3,6]
+
+        for (n = 0; n < letterLengthOrderInstructions.length; n++){
+
+            correctSEQ = getSample(letters, letterLengthOrderInstructions[n])
+            LetterSequencesInstructions.push(correctSEQ)
+    
+        };
+
+        // the example sequence for the instructions of the letter task
+        var exampleSequence = ["p", "f", "q"]
+
+        //The shown context image
+        var Context = "./images/lake.png"//"images/NoneContext.jpg";
+
+        var ContextPosition = "center";
+
+
+    
+
+        // ------------------------- make some egeneric trials for futher usage ----------------------------\\
+
+        
+
+        var cross = {
+            obj_type: 'cross',
+            startX: canvas_w/2, // location in the canvas
+            startY: canvas_h/2,
+            line_length: 50,
+            line_width: 6,
+            line_color: 'black', // You can use the HTML color name instead of the HEX color.
+            fill_color: 'black',
+            show_start_time: 0 // from the trial start (ms)
+        }
+
+        // fication cross for fgurther usage
+        var fixationcross = {
+            type: 'psychophysics',
+            background_color: "white",
+            canvas_width: canvas_w,
+            canvas_height: canvas_h,
+            stimuli: [cross],
+            choices: jsPsych.NO_KEYS,
+            trial_duration: 1000,
+            data:{
+                Stimulus_type: "fixationcorss"
+            }
+                
+        };
+
+        // announcement of a new block and time to wait
+        var new_block = {
+            type: 'html-keyboard-response',
+            choices:['space'],
+            trial_duration: breakBetweenBlocks,
+            stimulus: function(){
+                return betweenBlocks+ Math.round((percentage*100)).toString()+ "%" +betweenBlocks2 // this gives feedback about how many trials were correct in the last block
+            }
+        };
+
+        var new_block_dist = {
+            type: 'html-keyboard-response',
+            trial_duration: 30000,
+            choices:['space'],
+
+            stimulus: function(){
+                return betweenBlocks_dist + Math.round((percentage_dist*100)).toString()+ "%" + betweenBlocks2_dist // this gives feedback about how many trials were correct in the last block
+            }
+        };
+
+        var BeReady = {
+            type: 'html-keyboard-response',
+            trial_duration: 2000,
+            choices:jsPsych.NO_KEYS,
+            stimulus: "<h1> Be ready, the task is starting now! </h1>"
+        };
+
+        // announcement of the end of the learning phase and start of the distractor task
+        var end_of_learning = {
+            type: 'html-keyboard-response',
+            choices: jsPsych.NO_KEYS,
+            trial_duration: 30000,
+            stimulus: function(){
+                return DistractorTaskInstructions 
+            }
+        };
+
+        var end_of_learning_practice = {
+            type: 'html-keyboard-response',
+            choices: jsPsych.NO_KEYS,
+            trial_duration: 5000,
+            stimulus: function(){
+                return DistractorTaskInstructionsPractice3
+            }
+        };
+
+
+        // the end
+        var end = {
+            type: 'html-keyboard-response',
+            choices:['space'],
+            stimulus: function(){
+                if(total_percentage > 0.0){
+                    return betweenBlocks+ "<b>" +Math.round((percentage*100)).toString()+ "%<br></b>" +"Your total score is:" + "<b><br>" +Math.round((total_percentage*100)).toString()+ "%</b>" + last_block// this gives feedback about how many trials were correct in the last block
+                }else{
+                    return betweenBlocks+ "<b>" +Math.round((percentage*100)).toString()+ "%</b>" +"<p><br>Your total score is:<br></p>" + "<b>" +Math.round((total_percentage*100)).toString()+ "%</b>" 
+                }
+            },
+            data:{
+                MTurkID: workerID,
+                Stimulus_type: "end_of_practice",
+                TrialType: "practice_trials",
+                save: true,
+                assignmentID: assignmentID,
+                date: dateString,
+                subject_id: subject_id
+               
+            },
+            on_finish: function(data){
+                var date2 = new Date()
+                var endTime = date2.getTime()
+                data.timeMs = date2-date // total time of the task in milliseconds
+                data.timeMin = (date2-date)/60000 // total time of the task in Minutes
+                data.score = total_percentage
+            }
+        };
+
+        var feedback = {
+            type: 'image-keyboard-response',
+            choices: jsPsych.NO_KEYS,
+            stimulus_height: fbHeight,
+            maintain_aspect_ration: true,
+            trial_duration: 1000,
+            stimulus: function(){
+                var last_trial_correct = jsPsych.data.get().last(1).values()[0].correct;
+                if(last_trial_correct == true){
+                    return './Stimuli/right.png';
+                } else if (jsPsych.data.get().last(1).values()[0].response == "0"){
+                    return "./Stimuli/neutral.png";
+                } else {
+                    return "./Stimuli/wrong.png";
+                }
+            },
+        };
+        
+
+
+
+        // -----------                                    instructions                                                  -----\\
+
+
+        var betweenBlocks = "<p>Score for the last Block: </p>"
+
+        var betweenBlocks2 = "<p> <br> You get a 1 minute break now. <br> Press spacebar if you already want to continue to the next Block. <br> Please remember to respond as <b>fast</b> as you can! </p>"
+
+        var betweenBlocks_dist = "<p>Score for the Letter task: </p>"
+
+        var betweenBlocks2_dist = "<p> <br> In the next part, we ask you to recall some of the words from the list you learned. <br>"+
+            " For this we will present you with one of the words in a pair. Press spacebar as soon as you remember the other word. <br>"+
+            " Please remember to respond as <b>fast</b> as you can! <br>"+
+            " <b>But it is very important that you only press the spacebar once you remember the word!</b><br>"+
+            " After pressing spacebar you will only have 3 seconds to type in the the correct word. <br>"+
+            " Do not worry about the timing or the spelling to much. You will get points as long as the first three letters are correct, but please try to type the whole word. <br>"+
+            " If you cant remember the correct word please just type in <b>0</b>. <br>"+
+            " Good Luck! <br> <br>The task will start automatically in a few seconds. Please be ready. </p>"
+
+        var RecallTaskInstructions = "<p> <br> That was the end of part two. <br>"+
+            "<br> In part three we ask you to recall some of the words from the list you learned in part one. <br>"+
+            " For this we will present you with one of the words in a pair. Press spacebar as soon as you remember the other word (the target). <br>"
+        var RecallTaskInstructions2 = " Please respond as soon as you recall the target word. "+
+            " <br> And please try to remember the words as <b>fast</b> as you can! " +
+            "<br> After pressing spacebar you will only have 3 seconds to type in the correct word. <br>"+
+            "Do not worry about the speed or the spelling to much. We will count your response as correct as long as you get the first three letters right.<br>"+
+            "But please always try to type the whole word.<br>"
+        var RecallTaskInstructions3 = "If you cannot recall the target word, you still have to press spacebar, but please just type <b>0</b> (zero) into the response field. <br>"+
+            "In this case we will see a neutral instead of a sad smiley. <br>"+
+            " Good Luck! <br> <br>After pressing <b>Next</b>, the task will start automatically in a few seconds. Please be ready. </p>"
+
+
+        var last_block = "<p> <br> Congratulations! You made it through the practice blocks. <br> Press spacebar to continue to the comprehension questions."+
+            "<br> The page will turn blanck for 10 seconds to ensure that the data gets saved correctly.</p>"
+
+        var DistractorTaskInstructions = "<p> <br> That was the end of the list. <br> Next comes a short perfomance based memory task. <br>" +
+            " You will be presented with sequences of 3-7 letters. your task is to type in the sequence in the correct order after each presentation." + 
+            " <br> Please try to get as many sequences as possible correct. <br> Good Luck! <br> <br>The task will start automatically in a few seconds. Please be ready. </p>"
+
+        var DistractorTaskInstructionsPractice = "<p> <br> That was the end of the practice list. <br> Next comes a short perfomance based memory task. <br>" +
+            " You will be presented with sequences of 3-7 letters. Your task is to type in the sequence in the correct order after each presentation." + 
+            "<br> Press <b> Next</b> to see an example sequence." 
+
+        var DistractorTaskInstructionsPractice2 = "The sequence you saw was <b>pfq</b>, so the correct response would be to type in <b>pfq</b> in the response field that is shown after each sequence. "+ 
+            "<br> You have to be relatively quick with typing in your resonse, as you only get a few seconds to do so.<br>" +
+            "<br> Lets try this out on a few practice trials.</p>" 
+
+        var DistractorTaskInstructionsPractice3 = " Please try to get as many sequences as possible correct. <br> Good Luck! <br> <br>The task will start automatically in a few seconds. Please be ready. </p>"
+
+        //---------------------------------- distractor task instruction trials ----------------------\\
+        var distractorInstructions = {
+            type: 'instructions',
+            pages: [
+                DistractorTaskInstructionsPractice
+            ],
+            show_clickable_nav: true
+        }
+
+        var exampleSequence = ["p", "f", "q"]
+
+        var distractorInstructions2 = {
+            type: 'instructions',
+            pages: [
+                DistractorTaskInstructionsPractice2
+            ],
+            show_clickable_nav: true
+        }
+
+        var end_of_learning_practice = {
+            type: 'html-keyboard-response',
+            choices: jsPsych.NO_KEYS,
+            trial_duration: 5000,
+            stimulus: function(){
+                return DistractorTaskInstructionsPractice3
+            }
+        };
+
+        var RecallInstructions = {
+            type: 'instructions',
+            pages: [
+                RecallTaskInstructions,
+                RecallTaskInstructions2,
+                RecallTaskInstructions3
+            ],
+            show_clickable_nav: true
+        }
+
+
+        // ---------------------------------  some more  instructions -----------------------------------------//
+
+        
+        var instructions1 = "<h3>1. Instructions and practice trials<br></h3>"+
+            "<p>In the following, we will explain the experiment to you and let you try out the task on a few practice trials.<br></p>"
+        var instructions1_2 = "<p>But before we start a short request:<br><br></p>"+
+            "<h1>Please DO NOT restart the page</h1>" +
+            "<p><br> If you do, you will have to start over again and we will not be able to reward you for the time you already spent.<br>"+
+            "In case of technical difficulties please contact us directly.<br> Now that that is cleared up, let us move on to the actual task :)</p>"
+        var instructions2 = "<p>The experiment consists of four blocks that each have three parts.<br><br>"+
+            "In the first part you <b>learn a list of word pairs</b>."+
+            "<br> Your task is to try to remember the word pairs and immediatly test your memory by typing each word given the other word of the word pair you just learned."+
+            "<br>In the second part you will be performing a short <b>letter memory task</b>.<br>"+
+            "And finally, in the third part you have to <b>recall the words you learned in the first part</b> of each block.<br>"+
+            "The words have to be recalled using one of the words in each word pair as a cue.<br>"+
+            "So if you learned the word pair <b>ruin - shape</b> and we present you with the word <b>ruin</b> your task is to recall the word <b>shape</b><br><br>"+
+            "Each block is entirely seperate and you will be allowed to take a short break of max 1 minute between the blocks."+
+            "<br> You will also receive feedback about your performance at the end of each block.</p>"
+        var instructions2_5 = "<p>Most of the time the word pairs have a thematic background.<br><br>"+
+            "For example a picture of a supermarket. All words that appear on the same background are semantically related to the background."+
+            "<br> Furthermore, the background will also always reappear in the third part, the recall part, to help you remember the words."
+        var instructions3 = "<p><b>The bonus of up to £7.00 depends on the percentage of words and letter sequences you recall correctly.</b><br>"+
+            "The bonus is calculated as follows:<br>"+
+            "You will receive a bonus of £4.00 for the word pair memory task and £3.00 pounds for the letter memory task.<br>"+
+            "If you recall 100% of the words and sequences correctly you will get the entire £7.00, whereas if you get only 50% correct you will only get a bonus of £3.5" +
+            //"<br> To be precise, each word you recall in the third part adds 10 cents to your bonus and each letter sequence adds 6.6 cents."+
+            "<br>The base fee of £9 is independent of your performance.</p>"
+        var instructions3_5 = "<p><b>Please DO NOT write down any of the words or letters as a memory aid.</b><br>"+
+            "This is very important for the results of our study." 
+        var instructions4 = "<p>Now that you have a general idea of what the experiment looks like, let's give it a try.<br>"+
+            "Once you hit <b>Next</b>, one shortened practice block with all three parts will start.<br>"+
+            "It is ok if you get a few trials wrong, but please try to be as <b>accurate</b> and as <b>fast</b> as possible."
+            //+
+            //"You will need to get at least <b>70%</b> of the total practice trials correct to continue to the experimental phase.<p/>"
+        var instructions5 = "<p>Ready?<br> Then lets start with learning the first word pairs.</p>"
+
+        var instructions6 = "<p>Perfect, that was the end of the practice trials.</p>"
+        var instructions7 = "<p>In the next part, we will do a short comprehension check and remind you of the rules.<br> Once you press <b>Next</b>, the page will turn blanck for 10 seconds to ensure that the data gets saved correctly.</p><br>"
+
+        // instruction for the very beginning
+        var instruction_trial_1 = {
+            type: 'instructions',
+            pages: [
+                instructions1,
+                //instructions1_2,
+                instructions2,
+                instructions2_5,
+                instructions3,
+                instructions3_5,
+                instructions4,
+                instructions5
+            ],
+            show_clickable_nav: true
+        }
+
+        timeline.push(instruction_trial_1)
+
+        
+
+        var StartOfComprehension= {
+            type: 'instructions',
+            pages: [
+                instructions6,
+                instructions7
+            ],
+            show_clickable_nav: true
+        }
+
+
+        
+        
+        // counter, for calculating the final reward
+        var total_percentage = 0
+        var total_percentage_dist = 0
+        var block = 0
+        var num = 0
+
+        var PracticeWordPairLists = ["water mountain", "clouds fish", "boat reeds", "dock island", "pond hill"]
+
+        var PracticeCues = ["water",  "dock", "pond", "fish", "reeds"]
+        var PracticeTargets = ["mountain", "island", "hill", "clouds", "boat"]
+
+        // --------------------------------- start the practice blocks ------------------------------------ //
+
+
+
+        timeline.push(BeReady)
+        for (let j in PracticeWordPairLists){
+
+            num += 1
+            
+            
+            var wordPairPresentation = {
+                type: 'html-keyboard-response',
+                stimulus: PracticeWordPairLists[j],
+                choices: "NO_KEYS",
+                trial_duration: presentationTime,
+                stimulus: function(){
+                    const myArray = PracticeWordPairLists[j].split(" ")
+                    return '<div class="img-container"><img src="' + Context + '" alt="Image 1"><div class="text-overlay  ' + ContextPosition + '"><h1>' + myArray[0] + '<p> - <br> </p>' + myArray[1] + '</h1></div></div>'
+                },
+                data: {
+                    ListLength: PracticeWordPairLists.length,
+                    Trial_index: num,
+                    Phase: "Learning",
+                    ExperimentalPhase: false,
+                    correct: "-",
+                    Block: 0,
+                    MTurkID: workerID,
+                    word1: PracticeWordPairLists[j].split(" ")[0],
+                    word2: PracticeWordPairLists[j].split(" ")[1],
+                    save: true,
+                    assignmentID: assignmentID,
+                    date: dateString,
+                    subject_id: subject_id
+                }
+            };
+            var WordResponse1 ={
+                    type: "typed-response",
+                    prompt: '<div class="img-container"><img src="' + Context + '" alt="Image 1"><div class="text-overlay  ' + ContextPosition + '"><h1>' +  PracticeWordPairLists[j].split(" ")[0] + '</h1></div></div>',
+                    trial_duration: responseTime, 
+                    data: {
+                        ListLength: PracticeWordPairLists.length,
+                        Trial_index: num,
+                        Phase: "LearningResponse",
+                        Block: block,
+                        ExperimentalPhase: true,
+                        MTurkID: workerID,
+                        save: true,
+                        assignmentID: assignmentID,
+                        date: dateString,
+                        subject_id: subject_id,
+                        word1: PracticeWordPairLists[j].split(" ")[0],
+                        word2: PracticeWordPairLists[j].split(" ")[1],
+                        cue: PracticeWordPairLists[j].split(" ")[0],
+                        target: PracticeWordPairLists[j].split(" ")[1]
+                    },
+                    on_finish: function(data) {
+
+                        if (data.response.slice(0, 3) == data.target.slice(0,3)){
+
+                            data.correct = true;
+
+                        }else{
+                            data.correct = false;
+                        }
+                    }
+                };
+                var WordResponse2 ={
+                    type: "typed-response",
+                    prompt: '<div class="img-container"><img src="' + Context + '" alt="Image 1"><div class="text-overlay  ' + ContextPosition + '"><h1>' +  PracticeWordPairLists[j].split(" ")[1] + '</h1></div></div>',
+                    trial_duration: responseTime, 
+                    data: {
+                        ListLength: PracticeWordPairLists.length,
+                        Trial_index: num,
+                        Phase: "LearningResponse",
+                        Block: block,
+                        ExperimentalPhase: true,
+                        MTurkID: workerID,
+                        save: true,
+                        assignmentID: assignmentID,
+                        date: dateString,
+                        subject_id: subject_id,
+                        word1: PracticeWordPairLists[j].split(" ")[0],
+                        word2: PracticeWordPairLists[j].split(" ")[1],
+                        cue: PracticeWordPairLists[j].split(" ")[1],
+                        target: PracticeWordPairLists[j].split(" ")[0]
+                    },
+                    on_finish: function(data) {
+
+                        if (data.response.slice(0, 3) == data.target.slice(0,3)){
+
+                            data.correct = true;
+
+                        }else{
+                            data.correct = false;
+                        }
+                    }
+                };
+
+                var feedbackLearning = {
+                    type: 'html-keyboard-response',
+                    choices: jsPsych.NO_KEYS,
+                    stimulus_height: fbHeight,
+                    maintain_aspect_ration: true,
+                    trial_duration: 2000,
+                    stimulus: function(){
+                        var last_trial_correct = jsPsych.data.get().last(1).values()[0].correct;
+                        if(last_trial_correct == true){
+                            return '<div class="img-container"><img src="' + Context + 
+                                '" alt="Image 1"><div class="text-overlay  ' + ContextPosition + 
+                                '"><h1>' + PracticeWordPairLists[j].split(" ")[0] + '<p> - <br> </p>' + 
+                                PracticeWordPairLists[j].split(" ")[1] + '</h1></div></div>' + '<br>' + 
+                                '<img border="0" src="./Stimuli/right.png" align="center" style="width:100px;height:100px;">';
+                                
+                        } else {
+                            return '<div class="img-container"><img src="' + Context + 
+                                '" alt="Image 1"><div class="text-overlay  ' + ContextPosition + 
+                                '"><h1>' + PracticeWordPairLists[j].split(" ")[0] + '<p> - <br> </p>' + 
+                                PracticeWordPairLists[j].split(" ")[1] + '</h1></div></div>' + '<br>' + 
+                                '<img border="0" src="./Stimuli/wrong.png" align="center" style="width:100px;height:100px;">';
+                        }
+                    },
+                };
+
+            timeline.push(fixationcross, wordPairPresentation, fixationcross, WordResponse1, feedbackLearning, fixationcross, WordResponse2, feedbackLearning)
+        }
+
+        //----------------- Distractor task ------------------------------\\
+
+        timeline.push(distractorInstructions, fixationcross)
+
+        for(k = 0; k < exampleSequence.length; k++){
+            var letter_presentation = {
+                type: "html-keyboard-response",
+                trial_duration: presentationTime_dist,
+                stimulus:"<h1>" + exampleSequence[k]+ "</h1>",
+                choices: "NO_KEYS",
+                
+                data: {SequenceLength: exampleSequence.length,
+                    Trial_index: 0,
+                    Phase: "ExampleSequence",
+                    Block: 0,
+                    ExperimentalPhase: false,
+                    MTurkID: workerID,
+                    save: true,
+                    assignmentID: assignmentID,
+                    date: dateString,
+                    subject_id: subject_id,
+                    sequence: exampleSequence.join(""),
+                    letterSeen: exampleSequence[k],
+                    correct: false
+                }
+            };
+            timeline.push(letter_presentation);
+        }
+
+        timeline.push(distractorInstructions2, end_of_learning_practice)
+        num = 0
+
+        
+        // determine lengthOrder in which the letters are presented
+        timeline.push(BeReady, fixationcross);
+
+        for (n = 0; n < LetterSequencesInstructions.length; n++){
+            timeline.push(fixationcross)
+            num += 1
+            for(l = 0; l < LetterSequencesInstructions[n].length; l++){
+                var letter_presentation = {
+                    type: "html-keyboard-response",
+                    trial_duration: presentationTime_dist,
+                    stimulus:"<h1>" + LetterSequencesInstructions[n][l] + "</h1>",
+                    choices: "NO_KEYS",
+                    
+                    data: {SequenceLength: LetterSequencesInstructions[n].length,
+                        Trial_index: num,
+                        Phase: "LetterPresentation",
+                        Block: 0,
+                        ExperimentalPhase: false,
+                        MTurkID: workerID,
+                        save: true,
+                        assignmentID: assignmentID,
+                        date: dateString,
+                        subject_id: subject_id,
+                        sequence: LetterSequencesInstructions[n].join(""),
+                        letterSeen:  LetterSequencesInstructions[n][l],
+                        correct: false
+                    }
+                };
+                timeline.push(letter_presentation);
+            }
+            
+
+            var LetterResponse ={
+                type: "typed-response",
+                prompt: "<h1>" +  "What was the presented sequence?" + "</h1>",
+                trial_duration: responseTime_dist, 
+                data: {
+                    SequenceLength: LetterSequencesInstructions[n].length,
+                    Trial_index: num,
+                    Phase: "LetterRecallResponse",
+                    Block: 0,
+                    ExperimentalPhase: false,
+                    MTurkID: workerID,
+                    save: true,
+                    assignmentID: assignmentID,
+                    date: dateString,
+                    subject_id: subject_id,
+                    sequence: LetterSequencesInstructions[n].join("")
+                },
+                on_finish: function(data) {
+
+                    if (data.response ==  data.sequence){
+
+                        data.correct = true;
+                        // change the data of the bars
+                        jsPsych.data.get().last(2).filter({Phase: 'LetterPresentation'}).values()[0].correct = true
+
+                    }else{
+                        data.correct = false;
+                    }
+                }
+            };
+
+            
+
+            timeline.push(LetterResponse, feedback);
+        };
+
+        //----------------- Recall task ------------------------------\\
+   
+        timeline.push(RecallInstructions, BeReady, fixationcross)
+
+        num = 0
+        for (let j in PracticeCues){
+                num += 1
+                var CuePresentation = {
+                        type: 'html-keyboard-response',
+                        stimulus: '<div class="img-container"><img src="' + Context + '" alt="Image 1"><div class="text-overlay ' + ContextPosition + '"><h1>' +  PracticeCues[j] + '</h1></div></div>'+
+                        "<br><br><br> Please press space as soon as you recall the target.",
+                        //choices:"ALL_KEYS",
+                        data: {
+                            ListLength: PracticeCues.length,
+                            Trial_index: num,
+                            Phase: "CuePresentation",
+                            correct: false,
+                            Block: 0,
+                            ExperimentalPhase: false,
+                            MTurkID: workerID,
+                            save: true,
+                            assignmentID: assignmentID,
+                            date: dateString,
+                            subject_id: subject_id,
+                            cue: PracticeCues[j],
+                            target: PracticeTargets[j]
+                        }
+                    };
+                var ResponseCheck = {
+                        type: 'html-keyboard-response',
+                        stimulus: function(data) {
+                            if (jsPsych.data.get().last(2).filter({Phase: 'CuePresentation'}).values()[0].key_press == 32){
+                                return ""
+                            } else {
+                                return "<h1> Please only hit the space as a response.<br><br> All other responses will not work during the experiment.<br> <br> Please respond with the spacebar now.</h1>"
+                            }
+                        },
+                        choices:['space'],
+                        trial_duration: function(data) {
+                            if (jsPsych.data.get().last(2).filter({Phase: 'CuePresentation'}).values()[0].key_press == 32){
+                                return 0
+                            } else {
+                                return 10000
+                            }
+                        }
+                        , 
+                        data: {
+                            ListLength: PracticeCues.length,
+                            Trial_index: num,
+                            Phase: "CuePresentation",
+                            correct: false,
+                            Block: 0,
+                            ExperimentalPhase: false,
+                            MTurkID: workerID,
+                            save: true,
+                            assignmentID: assignmentID,
+                            date: dateString,
+                            subject_id: subject_id,
+                            cue: PracticeCues[j],
+                            target: PracticeTargets[j]
+                        }
+                    };
+                var WordResponse ={
+                    type: "typed-response",
+                    prompt: "<h1>" +  PracticeCues[j] + "</h1>",
+                    trial_duration: responseTime, 
+                    data: {
+                        ListLength: PracticeCues.length,
+                        Trial_index: num,
+                        Phase: "RecallResponse",
+                        Block: 0,
+                        ExperimentalPhase: false,
+                        MTurkID: workerID,
+                        save: true,
+                        assignmentID: assignmentID,
+                        date: dateString,
+                        subject_id: subject_id,
+                        cue: PracticeCues[j],
+                        target: PracticeTargets[j]
+                    },
+                    on_finish: function(data) {
+
+                        if (data.response.slice(0, 3) == PracticeTargets[j].slice(0,3)){
+
+                            data.correct = true;
+                            // change the data of the bars
+                            jsPsych.data.get().last(2).filter({Phase: 'CuePresentation'}).values()[0].correct = true
+
+                        }else{
+                            data.correct = false;
+                        }
+                    }
+                };
+
+
+                timeline.push(CuePresentation, ResponseCheck, WordResponse, feedback, fixationcross);
+        
+            };
+
+        
+            timeline.push(StartOfComprehension)
+
+
+
+        // ----------------------------- save the data ---------------------------------\\
+
+        function saveData1(filedata){
+            var filename = "../data/ID_" + subject_id + "_MTURKID" + workerID + "_experiment3_practice_trials" + ".txt";
+            $.post("./results_data.php", {postresult: filedata + "\n", postfile: filename })
+        }
+
+        function saveData2(filedata) {
+            var filename = "../data/ID_" + subject_id + "_MTURKID" + workerID + "_experiment3_practice_trials" + ".json";
+            $.post("./save_data.php", { postresult: filedata + "\n", postfile: filename })
+        }
+
+
+        function sayHi() {
+            window.location.href = nextPage;   
+        }
+
+
+        data_sent = false
+        jsPsych.init({
+            timeline: timeline,
+            show_progress_bar: true,
+            on_finish: function() {
+                if (!data_sent) {
+                    data_sent = true;
+                    
+                    saveData1(jsPsych.data.get().filter({save: true}).json().toString());
+                    saveData2(jsPsych.data.get().filter({save: true}).json())
+                    //saveDataToDb()
+                    console.log("end")
+
+                    setTimeout(sayHi, 10000); // 10 sekunden
+                    
+
+                    //window.location.href = nextPage; //send them to the next page
+
+
+
+                };
+
+            },
+
+        })
+
+        var all_data = jsPsych.data.get("rt");
+    </script>
+
+
+</html>

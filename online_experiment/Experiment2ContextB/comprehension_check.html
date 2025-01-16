@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Charley Wu">
+    <title>Study: Memory festival</title>
+
+    <script src="./js/d3.v3.min.js" charset="utf-8"></script>
+
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="./css/ui.css"> 
+
+    <!-- packeges needed to interact with php -->
+    <script type="text/javascript" src="./js/jquery-1.11.3.js"></script>
+    <script type="text/javascript" src="./js/jquery-ui-1.12.1.min.js"></script>
+
+</head>
+
+<body>
+    <div class='container'>
+        <!--Consent Form -->
+        <div id="page1" style="display:block">
+            <br><br>
+            <br><br>
+            <br><br>
+            <h3>2. Comprehension questions</h3>
+            <br><br>
+                <p><b>Congratulations on completing the practice trials! </b></p>
+                <p><b>We will now ask you three short questions to make sure you understood the task. </b></p>
+                <br>
+                <p>You will need to get all of the answers correct to proceed to the next experiment, so please read the questions carefully!</p><br>
+            
+            <br>
+            <button class='btn-primary text-xl' type="button" name="button" id="buttonBeginExperiment">Continue</button><br><br>
+        </div>
+
+        <!--Instructions -->
+        <div id="page2" style="width: 100%; overflow: scroll; display:none">
+            <br><br>
+            <h3>Here is a reminder about how the experiment works, just in case you need it:</h3>
+                <p><b>Feel free to skip this part if you think you got it by now. If you get the comprehension questions wrong, you will be returned to this section. </b></p>
+                <br>
+                <p>The experiment consists of four blocks that each have three parts.</p>
+
+                <p><b>1. Word pair learning</b></p>
+                <p>In the first part of each block you <b>learn a list of word pairs</b>. <br> Your task is to remember what words are associated with each other. <br> You also get the chance to practice the word pairs, by typing each word once given the other as a cue. <br> You will later (in the third part of each block) have to recall one of the words (the target) based on the other word (the cue). <br> Either word can later be the cue. <br>The number of word pairs you have to learn in each block varies from block to block.</p>
+                
+                <p><b>2. Letter memory task</b></p>
+                <p>In the second part you will be performing a short <b>letter memory task</b>. <br> your task here is to recall a sequence of letters and type them in in the correct order once you are prompted to do so. <br> You have limited time to do so. </p>
+                
+                <p><b>3. Word recall task</b></p>
+                <p>And finally, in the third part of each block you have to <b>recall the words you learned in the first part</b> of each block.</p>
+                <p>The words have to be recalled using one of the words in each word pair as a cue. So if you learned the word pair <b>ruin - shape</b> and we present you with the word <b>ruin</b> your task is to recall the word <b>shape</b>.<br> During the cue presentation we ask you to <b>only</b> press the spacebar once you have recalled the target word. Once you have done so, you have only a few seconds to type in the first three letters of the target word. 
+                    <br> You can also type in the whole word, but only the first three letters have to be correct for you to get points.</p><br>
+                <p>If you really cannot recall a word, you still need to press the space bar to continue, but then please respond by typing <b>0</b> (zero) into the response field.</p><br>
+                <p>Each block is entirely seperate. This means, that we will <b>never</b> ask you about words from previous blocks.<br> You will be allowed to take a short break of max 1 minute between the blocks. <br> You will also receive feedback about your performance at the end of each block.</p><br>
+                <p>Accuracy is very imprortant for this experiment, but please also try to be as <b>fast</b> as possible, when trying to remember the target word!</p><br>
+                <p>Ok. Now let’s test your understanding of the task.</p><br>
+                <br><br>
+
+            <button class='btn-primary text-xl' type="button" id="buttonInstructions">Continue</button><br><br>
+        </div>
+
+        <!--Comprehension Questions -->
+        <div id="page3" style="display:none;">
+            <br>
+            <h1 class="text-xl">Please answer a few questions about this study before proceeding</h1>
+
+            <div class="radio">
+                <legend class="text-l">What do you have to do in the first part of each block?</legend>
+                <label class="text-m">
+                <input type="radio" name="q1" id="q1a" value="option1" >
+                 &nbsp; &nbsp; Read out the words presented on the screen. Afterwards I have to type the word that is currently being shown in the presented box.
+              </label>
+            </div>
+            <div class="radio">
+                <label class="text-m">
+                <input type="radio" name="q1" id="q1b" value="option2">
+                 &nbsp;  &nbsp; Try to remember the presented word pairs as best as I can and practice the pairs by typing one word when the other is given.   <!--correct -->
+              </label>
+            </div>
+            <div class="radio">
+                <label class="text-m">
+                <input type="radio" name="q1" id="q1c" value="option3" >
+                 &nbsp;  &nbsp; Press a button as soon as I see a word I think I have seen before. And then give the first word, that I would associate with the shown words.
+              </label>
+            </div><br>
+
+            <div class="radio">
+                <legend class="text-l">In the recall part (part 3) of each block, what do you do if you cannot recall a target word?</legend>
+            </div>
+
+            <div class="radio">
+                <label class="text-m">
+                        <input type="radio" name="q2" id="q2a" value="option1" >
+                        &nbsp; &nbsp; Wait until the presented cue disappears by itself.
+                </label>
+            </div>
+
+            <div class="radio">
+                <label class="text-m">
+                        <input type="radio" name="q2" id="q2b" value="option2">
+                        &nbsp; &nbsp; Press spacebar and then just type the cue word into the response field.
+                </label>
+            </div>
+
+            <div class="radio">
+                <label class="text-m">
+                        <input type="radio" name="q2" id="q2c" value="option3">   <!--correct -->
+                        &nbsp; &nbsp; Press space bar and type <b>0</b> (zero) into the response field.               
+                </label>
+            </div><br>
+
+
+            <div class="radio">
+                <legend class="text-l">What is your task in part three of each block?</legend>
+                <label class="text-m">
+                <input type="radio" name="q3" id="q3a" value="option1" >
+                 &nbsp;  &nbsp; Press space bar as fast as you can and then recall the presented word.
+              </label>
+            </div>
+            <div class="radio">
+                <label class="text-m">
+                <input type="radio" name="q3" id="q3b" value="option2">
+                 &nbsp;  &nbsp; Try to recall the target word based on a cue word from one of the word pairs in the first part of each block. You can press the spacebar at any time, since you then have unlimited time to type the target word into the response field. 
+              </label>
+            </div>
+            <div class="radio">
+                <label class="text-m">
+                <input type="radio" name="q3" id="q3c" value="option3" >
+                 &nbsp;  &nbsp; Try to find an associated word to the presented word. Press space bar as soon as you have and then type the associated word into the response field. Any associations is ok, but scores will be given for particularly common words.
+              </label>
+            </div>
+            <div class="radio">
+                <label class="text-m">
+                <input type="radio" name="q3" id="q3d" value="option4" >
+                 &nbsp;  &nbsp; Try to recall the target word based on a cue word from one of the word pairs in the first part of each block. Press space bar as soon as you have recalled the target word and then type the word into the response field. <!--correct -->
+
+              </label>
+            </div><br>
+
+            <div class="radio">
+                <legend class="text-l">What should you pay attention to in part three of each block?</legend>
+            </div>
+
+
+            <p class="text-m"> Only when you answered all the question correctly will you be able to start the study.</p>
+            <div>
+                <button class='btn-primary text-xl' type="button" name="button" id="buttonInstructionsCheck">Check Answers</button>
+            </div>
+        </div>
+
+        <!--Send the participant on to the experiment -->
+
+        
+        
+
+        <div id="page4" style="display:none; text-align:center;">
+            <br><br><br><br><br><br><br><br><br><br><br><br>
+
+            <h1 class="text-xxl">Great job! You've answered all the questions correctly!</h1>
+            <br><br>
+            
+
+            <button class='btn-primary text-xl' type="button" name="button" id="buttonGoToPageFive">Let's get started!</button>
+            
+        </div>
+
+        <!--MAin Experiment -->
+        <div id="page5" style="display:none; text-align: center;">
+
+            <h1 class="text-xxl">If this page stays, something went wrong. Please refresh the page and answer the comprehension questions again. </h1>
+            <button class='btn-primary text-xl' type="button" id="nextRoundButton">ok</button>
+        </div>
+        <!--End of task -->
+        <div id="page6" style="display:none; text-align: center;">
+            <div id="thanksforcompleting">
+                <h1>
+                    <font size="4">It won't take long....</font>
+                </h1>
+            </div>
+            <br>
+            
+        </div>
+        <!--Demographic information -->
+        <div id="page7" style="display:none; text-align: left;">
+
+            <h2 class="text-xl">Thank you for completing our study.</h2>
+            <br>
+            <fieldset>
+              <div>
+                Please check that your <b>MTurk ID</b> is correct. If not entered correctly, you may not be able to receive your bonus.<br><br>
+                <form>
+                    MTurk ID:<br>
+                    <input type="text" id="MTurkID"><br>
+                </form>
+                </div> <br>
+              <div>
+                How old are you?<br>
+                <input id="age" type="number" name="quantity" min="18" max="99">
+              </div><br>
+              <div>
+                What's your gender?<br>
+                <input id="gender1" type="radio" name="gender" value="0" > Female<br>
+                <input id="gender2" type="radio" name="gender" value="1" > Male<br>
+              </div><br>
+              <div>
+              <form>Please let us know what strategies you used: <br>
+                <textarea cols="40" rows="5" id = "processDescription" name="Comments"> Describe your strategy </textarea><br><br>
+              </form>
+              </div>
+              </fieldset>                    
+                    <div style="width:50px;margin:0 auto; float:left">
+                        <button class='btn-primary text-xl' type="button" id="finishButton">Finish</button>
+                    </div>
+        </div>
+        <!--Completion code -->
+        <div id="page8" style="display:none; text-align: center;">
+          <h3>You have now completed the experiment.</h3>
+            <div id="rewardText" class="text-l" > Congratulations! You have earned a bonus of $0.00 </div><br>
+            <div class="text-l"> To earn your base fee of $X.XX, please copy and paste the following completion code into the Amazon MTurk window for this HIT: <b>COMPLETION CODE</b> </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="./js/experiment.js"></script>
+</body>
+<script>
+
+    // this addEvent listener makes sure, that the script only starts after the right button was pressed :)
+    document.body.addEventListener("click", event => {
+        if (event.target.nodeName == "BUTTON") {
+        if (event.target.textContent== "Let's get started!"){
+            //Capture user id and assignment id
+            assignmentId = turkGetParam('assignmentId');
+            workerId = turkGetParam('workerId');
+            subject_id = turkGetParam('subject_id');
+
+            //construct next page link with worker id and assignment id in the URI
+            nextPage = "experiment.html?" + "workerId=" + workerID + "&assignmentId=" + assignmentID + "&subject_id=" + subject_id; 
+
+            window.location.href = nextPage; //send them
+        }
+        }
+    });
+    
+
+</script>
+
+</html>
